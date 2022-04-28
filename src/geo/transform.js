@@ -1667,7 +1667,15 @@ class Transform {
         // Z-axis uses pixel coordinates when globe mode is enabled
         const pixelsPerMeter = this.pixelsPerMeter;
 
-        this._projectionScaler = pixelsPerMeter / (mercatorZfromAltitude(1, this.center.lat) * this.worldSize);
+        if (this.projection.name !== 'globe') {
+            this._projectionScaler = pixelsPerMeter / (mercatorZfromAltitude(1, this.center.lat) * this.worldSize);
+        } else {
+            this._projectionScaler = pixelsPerMeter / (mercatorZfromAltitude(1, this.center.lat) * this.worldSize);
+            const refScale = mercatorZfromAltitude(1, 45) * this.worldSize;
+            const centerScale = mercatorZfromAltitude(1, this.center.lat) * this.worldSize;
+            const combinedScale = interpolate(refScale, centerScale, clamp((this.zoom - 3) / 2, 0, 1));
+            this._projectionScaler = pixelsPerMeter / combinedScale;
+        }
         this.cameraToCenterDistance = 0.5 / Math.tan(halfFov) * this.height * this._projectionScaler;
 
         this._updateCameraState();
