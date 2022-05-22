@@ -79,6 +79,7 @@ type IControl = {
     onRemove(map: Map): void;
 
     +getDefaultPosition?: () => ControlPosition;
+    +_setLanguage?: (language: string) => void;
 }
 /* eslint-enable no-use-before-define */
 
@@ -1075,11 +1076,18 @@ class Map extends Camera {
         if (this.style) {
             for (const id in this.style._sourceCaches) {
                 const source = this.style._sourceCaches[id]._source;
-                if (source.language && source.language !== language && source._setLanguage) {
-                    source._setLanguage(language);
+                if (source.language && source.language !== this._language && source._setLanguage) {
+                    source._setLanguage(this._language);
                 }
             }
         }
+
+        for (const control of this._controls) {
+            if (control._setLanguage) {
+                control._setLanguage(this._language);
+            }
+        }
+
         return this;
     }
 
@@ -1139,11 +1147,11 @@ class Map extends Camera {
      * @private
      * @returns {boolean} Returns `globe-is-active` boolean.
      * @example
-     * if (map._usingGlobe()) {
+     * if (map._showingGlobe()) {
      *     // do globe things here
      * }
      */
-    _usingGlobe(): boolean { return this.transform.projection.name === 'globe'; }
+    _showingGlobe(): boolean { return this.transform.projection.name === 'globe'; }
 
     /**
      * Sets the map's projection. If called with `null` or `undefined`, the map will reset to Mercator.
